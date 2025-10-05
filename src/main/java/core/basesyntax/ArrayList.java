@@ -4,6 +4,7 @@ import java.util.NoSuchElementException;
 
 public class ArrayList<T> implements List<T> {
     private static final int DEFAULT_CAPACITY = 10;
+    private static final int GROWTH_FACTOR_DENOMINATOR = 2;
     private int capacity;
     private T[] array;
     private int currentSize;
@@ -16,19 +17,15 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public void add(T value) {
-        addCurrentSize();
+        ensureCapacityAndGrowIfArrayFull();
         array[currentSize - 1] = value;
     }
 
     @Override
     public void add(T value, int index) {
-        if (index < 0 || index > currentSize) {
-            throw new ArrayListIndexOutOfBoundsException("Index must be less then list size");
-        }
-        addCurrentSize();
-        for (int i = currentSize - 1; i >= index; i--) {
-            array[i + 1] = array[i];
-        }
+        checkAddMethodIndex(index);
+        ensureCapacityAndGrowIfArrayFull();
+        System.arraycopy(array, index, array, index + 1, currentSize - index);
         array[index] = value;
     }
 
@@ -56,12 +53,7 @@ public class ArrayList<T> implements List<T> {
         checkIndex(index);
         reduceCurrentSize();
         T removedElem = array[index];
-        for (int i = index + 1; i <= currentSize; i++) {
-            if (i > 0) {
-                array[i - 1] = array[i];
-            }
-        }
-        array[currentSize] = null;
+        System.arraycopy(array, index + 1, array, index, currentSize - index);
         return removedElem;
     }
 
@@ -72,7 +64,7 @@ public class ArrayList<T> implements List<T> {
                 return remove(i);
             }
         }
-        throw new NoSuchElementException();
+        throw new NoSuchElementException("Element " + element + " not found");
     }
 
     @Override
@@ -85,11 +77,11 @@ public class ArrayList<T> implements List<T> {
         return currentSize == 0;
     }
 
-    private void addCurrentSize() {
-        currentSize++;
-        if (currentSize == capacity) {
+    private void ensureCapacityAndGrowIfArrayFull() {
+        if (currentSize + 1 == capacity) {
             extendCapacity();
         }
+        currentSize++;
     }
 
     private void reduceCurrentSize() {
@@ -97,18 +89,23 @@ public class ArrayList<T> implements List<T> {
     }
 
     private void extendCapacity() {
-        this.capacity += capacity / 2;
+        this.capacity += capacity / GROWTH_FACTOR_DENOMINATOR;
         T[] newArray = (T[]) new Object[capacity];
-        for (int i = 0; i < currentSize; i++) {
-            newArray[i] = array[i];
-        }
+        System.arraycopy(array, 0, newArray, 0, currentSize);
         array = newArray;
     }
 
     private void checkIndex(int index) {
-        if (index >= 0 && (index < currentSize || currentSize == 0)) {
-            return;
+        if (index < 0 || index >= currentSize) {
+            throw new ArrayListIndexOutOfBoundsException(
+                    "Index: " + index + ", Size: " + currentSize);
         }
-        throw new ArrayListIndexOutOfBoundsException("Index must be less then list size");
+    }
+
+    private void checkAddMethodIndex(int index) {
+        if (index < 0 || index > currentSize) {
+            throw new ArrayListIndexOutOfBoundsException(
+                    "Index: " + index + ", Size: " + currentSize);
+        }
     }
 }
