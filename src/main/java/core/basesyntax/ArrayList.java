@@ -17,16 +17,18 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public void add(T value) {
-        ensureCapacityAndGrowIfArrayFull();
-        array[currentSize - 1] = value;
+        ensureCapacity();
+        array[currentSize] = value;
+        increaseCurrentSize();
     }
 
     @Override
     public void add(T value, int index) {
         checkAddMethodIndex(index);
-        ensureCapacityAndGrowIfArrayFull();
+        ensureCapacity();
         System.arraycopy(array, index, array, index + 1, currentSize - index);
         array[index] = value;
+        increaseCurrentSize();
     }
 
     @Override
@@ -54,6 +56,7 @@ public class ArrayList<T> implements List<T> {
         reduceCurrentSize();
         T removedElem = array[index];
         System.arraycopy(array, index + 1, array, index, currentSize - index);
+        array[currentSize] = null;
         return removedElem;
     }
 
@@ -77,13 +80,16 @@ public class ArrayList<T> implements List<T> {
         return currentSize == 0;
     }
 
-    private void ensureCapacityAndGrowIfArrayFull() {
-        if (currentSize + 1 == capacity) {
+    private void ensureCapacity() {
+        if (currentSize == capacity) {
             extendCapacity();
         }
-        currentSize++;
     }
 
+    private void increaseCurrentSize() {
+        currentSize++;
+    }
+    
     private void reduceCurrentSize() {
         currentSize--;
     }
